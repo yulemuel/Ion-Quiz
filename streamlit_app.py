@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# --- DATA: Common Ions with Categories (No changes needed here) ---
+# --- DATA: Common Ions with Categories ---
 IONS = {
     # Cations
     "H^+":        {'names': ["hydrogen"], 'tags': ['cation']},
@@ -90,7 +90,13 @@ if 'app_state' not in st.session_state:
     st.session_state.app_state = 'initial'
 
 # --- APP LAYOUT ---
-st.set_page_config(page_title="Ion Naming Quiz", layout="centered")
+# CHANGED: Added initial_sidebar_state="expanded" to make the sidebar open by default.
+st.set_page_config(
+    page_title="Ion Naming Quiz",
+    layout="centered",
+    initial_sidebar_state="expanded" 
+)
+
 st.title("🧪 Chemistry Ion Naming Practice")
 
 # --- STATE 1: INITIAL MODE SELECTION ---
@@ -101,7 +107,7 @@ if st.session_state.app_state == 'initial':
     cols[1].button("Anions", on_click=select_mode, args=('Anions',), use_container_width=True)
     cols[2].button("Compound Ions", on_click=select_mode, args=('Compound Ions',), use_container_width=True)
     cols[3].button("All Ions", on_click=select_mode, args=('All Ions',), use_container_width=True)
-    st.info("ℹ️ Choosing Cations, Anions, or Compound Ions will start the quiz immediately. Choosing 'All Ions' will let you select the number of questions.")
+    st.info("ℹ️ You might want to study the formulas and names of the ions before you start the quiz.")
 
 # --- STATE 2: QUESTION COUNT SELECTION (For 'All Ions' mode only) ---
 elif st.session_state.app_state == 'select_count':
@@ -118,13 +124,12 @@ elif st.session_state.app_state == 'select_count':
 # --- STATE 3: QUIZ ACTIVE OR COMPLETE ---
 elif st.session_state.app_state == 'quiz_active':
     with st.sidebar:
-        st.header("Your Progress")
+        st.header("📊 Your Progress") # Added an emoji to the header
         st.caption(f"Mode: {st.session_state.get('quiz_mode', 'N/A')}")
         st.write("---")
         if not st.session_state.get('answer_history', []):
             st.write("Your answers will appear here.")
         else:
-            # CHANGE 1: Enhanced progress tracking logic
             for item in st.session_state.answer_history:
                 formula_latex = f"$\\mathrm{{{item['formula']}}}$"
                 if item['is_correct']:
@@ -158,7 +163,6 @@ elif st.session_state.app_state == 'quiz_active':
         primary_answer = ion_data['names'][0]
 
         st.header("What is the name of this ion?")
-        # CHANGE 2: Added \Huge command to increase the font size of the formula.
         st.latex(f"\\Huge \\mathrm{{{current_ion_formula}}}")
 
         with st.form(key="answer_form", clear_on_submit=True):
@@ -173,7 +177,6 @@ elif st.session_state.app_state == 'quiz_active':
                 st.session_state.feedback = "✅ Correct! Well done." if is_correct else f"❌ Not quite. The answer is **{primary_answer}**."
                 if is_correct: st.session_state.score += 1
                 
-                # CHANGE 3: Add the correct answer to the history item for detailed feedback
                 history_item = {
                     'formula': current_ion_formula,
                     'user_answer': user_answer.strip(),
