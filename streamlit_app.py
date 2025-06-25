@@ -1,131 +1,173 @@
 import streamlit as st
 import random
 
-# --- DATA: Common Ions for Edexcel IAL Chemistry ---
-# Values are a list of acceptable answers.
-# The first name in the list is the primary/preferred answer for feedback.
+# --- DATA: Common Ions with Categories (No changes needed here) ---
 IONS = {
-    # Positive Ions (Cations)
-    "H^+": ["hydrogen"],
-    "Na^+": ["sodium"],
-    "K^+": ["potassium"],
-    "Mg^{2+}": ["magnesium"],
-    "Ca^{2+}": ["calcium"],
-    "Al^{3+}": ["aluminium", "aluminum"],
-    "Ag^+": ["silver"],
-    "Zn^{2+}": ["zinc"],
-    "NH_4^+": ["ammonium"],
-    "Fe^{2+}": ["iron(II)"],
-    "Fe^{3+}": ["iron(III)"],
-    "Cu^+": ["copper(I)"],
-    "Cu^{2+}": ["copper(II)"],
-    "Pb^{2+}": ["lead(II)"],
-
-    # Negative Ions (Anions)
-    "Cl^-": ["chloride"],
-    "Br^-": ["bromide"],
-    "I^-": ["iodide"],
-    "O^{2-}": ["oxide"],
-    "S^{2-}": ["sulfide", "sulphide"],
-    "OH^-": ["hydroxide"],
-    "NO_3^-": ["nitrate"],
-    "CO_3^{2-}": ["carbonate"],
-    "SO_4^{2-}": ["sulfate", "sulphate"],
-    "PO_4^{3-}": ["phosphate"],
-    "HCO_3^-": ["hydrogencarbonate"],
-    "HSO_4^-": ["hydrogensulfate", "hydrogensulphate"],
-    "CrO_4^{2-}": ["chromate"],
-    "Cr_2O_7^{2-}": ["dichromate"],
-    # CHANGED: "permanganate" is now the primary name as requested.
-    "MnO_4^-": ["permanganate", "manganate(VII)"],
+    # Cations
+    "H^+":        {'names': ["hydrogen"], 'tags': ['cation']},
+    "Na^+":       {'names': ["sodium"], 'tags': ['cation']},
+    "K^+":        {'names': ["potassium"], 'tags': ['cation']},
+    "Mg^{2+}":    {'names': ["magnesium"], 'tags': ['cation']},
+    "Ca^{2+}":    {'names': ["calcium"], 'tags': ['cation']},
+    "Al^{3+}":    {'names': ["aluminium", "aluminum"], 'tags': ['cation']},
+    "Ag^+":       {'names': ["silver"], 'tags': ['cation']},
+    "Zn^{2+}":    {'names': ["zinc"], 'tags': ['cation']},
+    "Fe^{2+}":    {'names': ["iron(II)"], 'tags': ['cation']},
+    "Fe^{3+}":    {'names': ["iron(III)"], 'tags': ['cation']},
+    "Cu^+":       {'names': ["copper(I)"], 'tags': ['cation']},
+    "Cu^{2+}":    {'names': ["copper(II)"], 'tags': ['cation']},
+    "Pb^{2+}":    {'names': ["lead(II)"], 'tags': ['cation']},
+    "NH_4{}^+":   {'names': ["ammonium"], 'tags': ['cation', 'compound']},
+    # Anions
+    "Cl^-":       {'names': ["chloride"], 'tags': ['anion']},
+    "Br^-":       {'names': ["bromide"], 'tags': ['anion']},
+    "I^-":        {'names': ["iodide"], 'tags': ['anion']},
+    "O^{2-}":     {'names': ["oxide"], 'tags': ['anion']},
+    "S^{2-}":     {'names': ["sulfide", "sulphide"], 'tags': ['anion']},
+    "OH^-":       {'names': ["hydroxide"], 'tags': ['anion', 'compound']},
+    "NO_3{}^-":   {'names': ["nitrate"], 'tags': ['anion', 'compound']},
+    "CO_3{}^{2-}":{'names': ["carbonate"], 'tags': ['anion', 'compound']},
+    "SO_4{}^{2-}":{'names': ["sulfate", "sulphate"], 'tags': ['anion', 'compound']},
+    "PO_4{}^{3-}":{'names': ["phosphate"], 'tags': ['anion', 'compound']},
+    "HCO_3{}^-":  {'names': ["hydrogencarbonate"], 'tags': ['anion', 'compound']},
+    "HSO_4{}^-":  {'names': ["hydrogensulfate", "hydrogensulphate"], 'tags': ['anion', 'compound']},
+    "CrO_4{}^{2-}":{'names': ["chromate"], 'tags': ['anion', 'compound']},
+    "Cr_2O_7{}^{2-}":{'names': ["dichromate"], 'tags': ['anion', 'compound']},
+    "MnO_4{}^-":  {'names': ["permanganate", "manganate(VII)"], 'tags': ['anion', 'compound']},
 }
 
+# --- FUNCTIONS ---
 
-def initialize_quiz():
-    """Sets up or resets the quiz state in the session."""
-    st.session_state.ions_list = list(IONS.keys())
-    random.shuffle(st.session_state.ions_list)
+def prepare_question_list(mode, num_questions='All'):
+    """Filters ions, sets the number of questions, and initializes quiz state."""
+    if mode == 'All Ions':
+        potential_questions = list(IONS.keys())
+    else:
+        # BUG FIX: Use a reliable dictionary mapping instead of string manipulation.
+        MODE_TO_TAG_MAP = {
+            'Cations': 'cation',
+            'Anions': 'anion',
+            'Compound Ions': 'compound'
+        }
+        tag_to_filter = MODE_TO_TAG_MAP[mode]
+        potential_questions = [ion for ion, data in IONS.items() if tag_to_filter in data['tags']]
+    
+    random.shuffle(potential_questions)
+    
+    if num_questions != 'All' and isinstance(num_questions, int):
+        st.session_state.ions_list = potential_questions[:num_questions]
+    else:
+        st.session_state.ions_list = potential_questions
+    
     st.session_state.current_question_index = 0
     st.session_state.score = 0
-    st.session_state.total_answered = 0
+    st.session_state.answer_history = []
     st.session_state.feedback = None
 
-# --- STREAMLIT APP LAYOUT ---
+def select_mode(mode):
+    """Handles the logic for when a user selects a quiz mode."""
+    st.session_state.quiz_mode = mode
+    if mode == 'All Ions':
+        st.session_state.app_state = 'select_count'
+    else:
+        prepare_question_list(mode)
+        st.session_state.app_state = 'quiz_active'
 
+def start_quiz_with_count(num_questions):
+    """Starts the 'All Ions' quiz with a selected number of questions."""
+    prepare_question_list('All Ions', num_questions)
+    st.session_state.app_state = 'quiz_active'
+
+def reset_app():
+    """Resets the entire app to the initial mode selection screen."""
+    st.session_state.app_state = 'initial'
+    keys_to_clear = ['quiz_mode', 'ions_list', 'current_question_index', 'score', 'answer_history', 'feedback']
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+
+# --- INITIALIZE STATE ---
+if 'app_state' not in st.session_state:
+    st.session_state.app_state = 'initial'
+
+# --- APP LAYOUT ---
 st.set_page_config(page_title="Ion Naming Quiz", layout="centered")
-
 st.title("🧪 Edexcel IAL Ion Naming Practice")
-st.write("""
-Test your knowledge of common ion names. Type your answer in the box and press Enter or click Submit.
-Pay close attention to spelling and Roman numerals! Some common name variations are accepted.
-""")
 
-# --- INITIALIZATION & RESET ---
+# --- STATE 1: INITIAL MODE SELECTION ---
+if st.session_state.app_state == 'initial':
+    st.subheader("Choose a category to practice:")
+    cols = st.columns(4)
+    cols[0].button("Cations", on_click=select_mode, args=('Cations',), use_container_width=True)
+    cols[1].button("Anions", on_click=select_mode, args=('Anions',), use_container_width=True)
+    cols[2].button("Compound Ions", on_click=select_mode, args=('Compound Ions',), use_container_width=True)
+    cols[3].button("All Ions", on_click=select_mode, args=('All Ions',), use_container_width=True)
+    st.info("ℹ️ Choosing Cations, Anions, or Compound Ions will start the quiz immediately. Choosing 'All Ions' will let you select the number of questions.")
 
-if 'ions_list' not in st.session_state:
-    initialize_quiz()
+# --- STATE 2: QUESTION COUNT SELECTION (For 'All Ions' mode only) ---
+elif st.session_state.app_state == 'select_count':
+    st.subheader("Mode: All Ions")
+    st.write("How many questions would you like?")
+    
+    available_count = len(IONS)
+    cols = st.columns(4)
+    cols[0].button("5 Questions", on_click=start_quiz_with_count, args=(5,), use_container_width=True)
+    cols[1].button("10 Questions", on_click=start_quiz_with_count, args=(10,), use_container_width=True)
+    cols[2].button(f"All ({available_count})", on_click=start_quiz_with_count, args=('All',), use_container_width=True)
+    cols[3].button("⬅️ Back", on_click=reset_app, use_container_width=True)
 
-if st.button("🔄 Start New Quiz"):
-    initialize_quiz()
-    st.rerun()
-
-# --- QUIZ COMPLETION ---
-
-if st.session_state.current_question_index >= len(st.session_state.ions_list):
-    st.success(f"🎉 **Quiz Complete!** 🎉")
-    st.balloons()
-    final_score = st.session_state.score
-    total_questions = len(st.session_state.ions_list)
-    st.metric(label="Your Final Score", value=f"{final_score} / {total_questions}")
-    percentage = (final_score / total_questions) * 100 if total_questions > 0 else 0
-    st.write(f"You scored **{percentage:.1f}%**.")
-    st.info("Click 'Start New Quiz' to try again with a new set of questions.")
-    st.stop()
-
-# --- MAIN QUIZ INTERFACE ---
-
-col1, col2 = st.columns([3, 1])
-with col1:
-    progress_percent = st.session_state.total_answered / len(IONS)
-    st.progress(progress_percent, text=f"Progress: {st.session_state.total_answered} / {len(IONS)}")
-with col2:
-    st.metric(label="Score", value=f"{st.session_state.score} / {st.session_state.total_answered}")
-
-if st.session_state.feedback:
-    st.info(st.session_state.feedback)
-    st.session_state.feedback = None
-
-# Get the current question's details
-current_ion_formula = st.session_state.ions_list[st.session_state.current_question_index]
-correct_answers_list = IONS[current_ion_formula]
-primary_answer = correct_answers_list[0]
-
-st.header("What is the name of this ion?")
-# CHANGED: Use \mathrm{...} to display the formula in an upright font (no italics).
-# The f-string with double braces {{...}} correctly formats the LaTeX string.
-st.latex(f"\\mathrm{{{current_ion_formula}}}")
-
-
-# --- ANSWER FORM ---
-with st.form(key="answer_form", clear_on_submit=True):
-    user_answer = st.text_input("Your Answer:", placeholder="e.g., sulfate", key="user_input")
-    submitted = st.form_submit_button("Submit Answer")
-
-    if submitted:
-        normalized_user_answer = user_answer.strip().lower()
-        normalized_correct_answers = [ans.lower() for ans in correct_answers_list]
-
-        is_correct = normalized_user_answer in normalized_correct_answers
-
-        st.session_state.total_answered += 1
-        if is_correct:
-            st.session_state.score += 1
-            st.session_state.feedback = f"✅ Correct! Well done."
+# --- STATE 3: QUIZ ACTIVE OR COMPLETE ---
+elif st.session_state.app_state == 'quiz_active':
+    with st.sidebar:
+        st.header("Your Progress")
+        st.caption(f"Mode: {st.session_state.get('quiz_mode', 'N/A')}")
+        st.write("---")
+        if not st.session_state.get('answer_history', []):
+            st.write("Your answers will appear here.")
         else:
-            # The backticks ` ` around the formula will display it correctly in the feedback.
-            st.session_state.feedback = (
-                f"❌ Not quite. The correct answer for `{current_ion_formula}` is **{primary_answer}**."
-            )
+            for item in st.session_state.answer_history:
+                emoji = "✅" if item['is_correct'] else "❌"
+                formula_latex = f"$\\mathrm{{{item['formula']}}}$"
+                st.markdown(f"{emoji} {formula_latex}: You wrote *{item['user_answer']}*")
+        st.write("---")
+        st.button("End Quiz & Start Over", on_click=reset_app, use_container_width=True)
 
-        st.session_state.current_question_index += 1
-        st.rerun()
+    if st.session_state.current_question_index >= len(st.session_state.ions_list):
+        st.success(f"🎉 **Quiz Complete!** 🎉")
+        st.balloons()
+        final_score = st.session_state.score
+        total_questions = len(st.session_state.ions_list)
+        st.metric(label="Your Final Score", value=f"{final_score} / {total_questions}")
+        st.info("See your full progress in the sidebar. Click 'End Quiz & Start Over' to play again.")
+    else:
+        total_questions_in_mode = len(st.session_state.ions_list)
+        progress_text = f"Question {st.session_state.current_question_index + 1} of {total_questions_in_mode}"
+        st.progress((st.session_state.current_question_index) / total_questions_in_mode, text=progress_text)
+
+        if st.session_state.feedback:
+            st.info(st.session_state.feedback)
+            st.session_state.feedback = None
+
+        current_ion_formula = st.session_state.ions_list[st.session_state.current_question_index]
+        ion_data = IONS[current_ion_formula]
+        primary_answer = ion_data['names'][0]
+
+        st.header("What is the name of this ion?")
+        st.latex(f"\\mathrm{{{current_ion_formula}}}")
+
+        with st.form(key="answer_form", clear_on_submit=True):
+            user_answer = st.text_input("Your Answer:", placeholder="e.g., sulfate", key="user_input")
+            submitted = st.form_submit_button("Submit Answer")
+
+            if submitted and user_answer:
+                normalized_user_answer = user_answer.strip().lower()
+                normalized_correct_answers = [ans.lower() for ans in ion_data['names']]
+                is_correct = normalized_user_answer in normalized_correct_answers
+                st.session_state.feedback = "✅ Correct! Well done." if is_correct else f"❌ Not quite. The answer is **{primary_answer}**."
+                if is_correct: st.session_state.score += 1
+                
+                st.session_state.answer_history.append({
+                    'formula': current_ion_formula, 'user_answer': user_answer.strip(), 'is_correct': is_correct
+                })
+                st.session_state.current_question_index += 1
+                st.rerun()
