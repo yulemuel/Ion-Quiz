@@ -43,7 +43,6 @@ def prepare_question_list(mode, num_questions='All'):
     if mode == 'All Ions':
         potential_questions = list(IONS.keys())
     else:
-        # BUG FIX: Use a reliable dictionary mapping instead of string manipulation.
         MODE_TO_TAG_MAP = {
             'Cations': 'cation',
             'Anions': 'anion',
@@ -92,7 +91,7 @@ if 'app_state' not in st.session_state:
 
 # --- APP LAYOUT ---
 st.set_page_config(page_title="Ion Naming Quiz", layout="centered")
-st.title("🧪 Edexcel IAL Ion Naming Practice")
+st.title("🧪 Chemistry Ion Naming Practice")
 
 # --- STATE 1: INITIAL MODE SELECTION ---
 if st.session_state.app_state == 'initial':
@@ -125,10 +124,16 @@ elif st.session_state.app_state == 'quiz_active':
         if not st.session_state.get('answer_history', []):
             st.write("Your answers will appear here.")
         else:
+            # CHANGE 1: Enhanced progress tracking logic
             for item in st.session_state.answer_history:
-                emoji = "✅" if item['is_correct'] else "❌"
                 formula_latex = f"$\\mathrm{{{item['formula']}}}$"
-                st.markdown(f"{emoji} {formula_latex}: You wrote *{item['user_answer']}*")
+                if item['is_correct']:
+                    st.markdown(f"✅ {formula_latex}: You wrote *{item['user_answer']}*")
+                else:
+                    st.markdown(
+                        f"❌ {formula_latex}: You wrote *{item['user_answer']}*. "
+                        f"Correct: **{item['correct_answer']}**"
+                    )
         st.write("---")
         st.button("End Quiz & Start Over", on_click=reset_app, use_container_width=True)
 
@@ -153,7 +158,8 @@ elif st.session_state.app_state == 'quiz_active':
         primary_answer = ion_data['names'][0]
 
         st.header("What is the name of this ion?")
-        st.latex(f"\\mathrm{{{current_ion_formula}}}")
+        # CHANGE 2: Added \Huge command to increase the font size of the formula.
+        st.latex(f"\\Huge \\mathrm{{{current_ion_formula}}}")
 
         with st.form(key="answer_form", clear_on_submit=True):
             user_answer = st.text_input("Your Answer:", placeholder="e.g., sulfate", key="user_input")
@@ -163,11 +169,18 @@ elif st.session_state.app_state == 'quiz_active':
                 normalized_user_answer = user_answer.strip().lower()
                 normalized_correct_answers = [ans.lower() for ans in ion_data['names']]
                 is_correct = normalized_user_answer in normalized_correct_answers
+                
                 st.session_state.feedback = "✅ Correct! Well done." if is_correct else f"❌ Not quite. The answer is **{primary_answer}**."
                 if is_correct: st.session_state.score += 1
                 
-                st.session_state.answer_history.append({
-                    'formula': current_ion_formula, 'user_answer': user_answer.strip(), 'is_correct': is_correct
-                })
+                # CHANGE 3: Add the correct answer to the history item for detailed feedback
+                history_item = {
+                    'formula': current_ion_formula,
+                    'user_answer': user_answer.strip(),
+                    'is_correct': is_correct,
+                    'correct_answer': primary_answer
+                }
+                st.session_state.answer_history.append(history_item)
+                
                 st.session_state.current_question_index += 1
                 st.rerun()
