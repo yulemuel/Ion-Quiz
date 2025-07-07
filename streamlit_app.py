@@ -2,38 +2,40 @@ import streamlit as st
 import random
 
 # --- DATA: Common Ions with Categories ---
+# This dictionary now contains exactly 30 ions.
 IONS = {
     # Cations
-    "H^+":        {'names': ["hydrogen"], 'tags': ['cation']},
-    "Na^+":       {'names': ["sodium"], 'tags': ['cation']},
-    "K^+":        {'names': ["potassium"], 'tags': ['cation']},
-    "Mg^{2+}":    {'names': ["magnesium"], 'tags': ['cation']},
-    "Ca^{2+}":    {'names': ["calcium"], 'tags': ['cation']},
-    "Al^{3+}":    {'names': ["aluminium", "aluminum"], 'tags': ['cation']},
-    "Ag^+":       {'names': ["silver"], 'tags': ['cation']},
-    "Zn^{2+}":    {'names': ["zinc"], 'tags': ['cation']},
-    "Fe^{2+}":    {'names': ["iron(II)"], 'tags': ['cation']},
-    "Fe^{3+}":    {'names': ["iron(III)"], 'tags': ['cation']},
-    "Cu^+":       {'names': ["copper(I)"], 'tags': ['cation']},
-    "Cu^{2+}":    {'names': ["copper(II)"], 'tags': ['cation']},
-    "Pb^{2+}":    {'names': ["lead(II)"], 'tags': ['cation']},
-    "NH_4{}^+":   {'names': ["ammonium"], 'tags': ['cation', 'compound']},
+    "H^+":        {'names': ["hydrogen ion"], 'tags': ['cation']},
+    "Na^+":       {'names': ["sodium ion"], 'tags': ['cation']},
+    "K^+":        {'names': ["potassium ion"], 'tags': ['cation']},
+    "Mg^{2+}":    {'names': ["magnesium ion"], 'tags': ['cation']},
+    "Ca^{2+}":    {'names': ["calcium ion"], 'tags': ['cation']},
+    "Al^{3+}":    {'names': ["aluminium ion", "aluminum ion"], 'tags': ['cation']},
+    "Ag^+":       {'names': ["silver ion"], 'tags': ['cation']},
+    "Zn^{2+}":    {'names': ["zinc ion"], 'tags': ['cation']},
+    "Fe^{2+}":    {'names': ["iron(II) ion"], 'tags': ['cation']},
+    "Fe^{3+}":    {'names': ["iron(III) ion"], 'tags': ['cation']},
+    "Cu^+":       {'names': ["copper(I) ion"], 'tags': ['cation']},
+    "Cu^{2+}":    {'names': ["copper(II) ion"], 'tags': ['cation']},
+    "Pb^{2+}":    {'names': ["lead(II) ion"], 'tags': ['cation']},
+    "NH_4{}^+":   {'names': ["ammonium ion"], 'tags': ['cation', 'compound']},
     # Anions
-    "Cl^-":       {'names': ["chloride"], 'tags': ['anion']},
-    "Br^-":       {'names': ["bromide"], 'tags': ['anion']},
-    "I^-":        {'names': ["iodide"], 'tags': ['anion']},
-    "O^{2-}":     {'names': ["oxide"], 'tags': ['anion']},
-    "S^{2-}":     {'names': ["sulfide", "sulphide"], 'tags': ['anion']},
-    "OH^-":       {'names': ["hydroxide"], 'tags': ['anion', 'compound']},
-    "NO_3{}^-":   {'names': ["nitrate"], 'tags': ['anion', 'compound']},
-    "CO_3{}^{2-}":{'names': ["carbonate"], 'tags': ['anion', 'compound']},
-    "SO_4{}^{2-}":{'names': ["sulfate", "sulphate"], 'tags': ['anion', 'compound']},
-    "PO_4{}^{3-}":{'names': ["phosphate"], 'tags': ['anion', 'compound']},
-    "HCO_3{}^-":  {'names': ["hydrogencarbonate"], 'tags': ['anion', 'compound']},
-    "HSO_4{}^-":  {'names': ["hydrogensulfate", "hydrogensulphate"], 'tags': ['anion', 'compound']},
-    "CrO_4{}^{2-}":{'names': ["chromate"], 'tags': ['anion', 'compound']},
-    "Cr_2O_7{}^{2-}":{'names': ["dichromate"], 'tags': ['anion', 'compound']},
-    "MnO_4{}^-":  {'names': ["permanganate", "manganate(VII)"], 'tags': ['anion', 'compound']},
+    "Cl^-":       {'names': ["chloride ion"], 'tags': ['anion']},
+    "Br^-":       {'names': ["bromide ion"], 'tags': ['anion']},
+    "I^-":        {'names': ["iodide ion"], 'tags': ['anion']},
+    "O^{2-}":     {'names': ["oxide ion"], 'tags': ['anion']},
+    "S^{2-}":     {'names': ["sulfide ion", "sulphide ion"], 'tags': ['anion']},
+    "N^{3-}":     {'names': ["nitride ion"], 'tags': ['anion']}, # The added ion
+    "OH^-":       {'names': ["hydroxide ion"], 'tags': ['anion', 'compound']},
+    "NO_3{}^-":   {'names': ["nitrate ion"], 'tags': ['anion', 'compound']},
+    "CO_3{}^{2-}":{'names': ["carbonate ion"], 'tags': ['anion', 'compound']},
+    "SO_4{}^{2-}":{'names': ["sulfate ion", "sulphate ion"], 'tags': ['anion', 'compound']},
+    "PO_4{}^{3-}":{'names': ["phosphate ion"], 'tags': ['anion', 'compound']},
+    "HCO_3{}^-":  {'names': ["hydrogencarbonate ion"], 'tags': ['anion', 'compound']},
+    "HSO_4{}^-":  {'names': ["hydrogensulfate ion", "hydrogensulphate ion"], 'tags': ['anion', 'compound']},
+    "CrO_4{}^{2-}":{'names': ["chromate ion"], 'tags': ['anion', 'compound']},
+    "Cr_2O_7{}^{2-}":{'names': ["dichromate ion"], 'tags': ['anion', 'compound']},
+    "MnO_4{}^-":  {'names': ["permanganate ion"], 'tags': ['anion', 'compound']},
 }
 
 # --- FUNCTIONS ---
@@ -90,7 +92,6 @@ if 'app_state' not in st.session_state:
     st.session_state.app_state = 'initial'
 
 # --- APP LAYOUT ---
-# CHANGED: Added initial_sidebar_state="expanded" to make the sidebar open by default.
 st.set_page_config(
     page_title="Ion Naming Quiz",
     layout="centered",
@@ -114,17 +115,20 @@ elif st.session_state.app_state == 'select_count':
     st.subheader("Mode: All Ions")
     st.write("How many questions would you like?")
     
-    available_count = len(IONS)
+    # This line dynamically gets the number of keys in the IONS dictionary.
+    available_count = len(IONS) 
+    
     cols = st.columns(4)
     cols[0].button("5 Questions", on_click=start_quiz_with_count, args=(5,), use_container_width=True)
     cols[1].button("10 Questions", on_click=start_quiz_with_count, args=(10,), use_container_width=True)
+    # This button will now display "All (30)"
     cols[2].button(f"All ({available_count})", on_click=start_quiz_with_count, args=('All',), use_container_width=True)
     cols[3].button("⬅️ Back", on_click=reset_app, use_container_width=True)
 
 # --- STATE 3: QUIZ ACTIVE OR COMPLETE ---
 elif st.session_state.app_state == 'quiz_active':
     with st.sidebar:
-        st.header("📊 Your Progress") # Added an emoji to the header
+        st.header("📊 Your Progress")
         st.caption(f"Mode: {st.session_state.get('quiz_mode', 'N/A')}")
         st.write("---")
         if not st.session_state.get('answer_history', []):
@@ -166,7 +170,7 @@ elif st.session_state.app_state == 'quiz_active':
         st.latex(f"\\Huge \\mathrm{{{current_ion_formula}}}")
 
         with st.form(key="answer_form", clear_on_submit=True):
-            user_answer = st.text_input("Your Answer:", placeholder="e.g., sulfate", key="user_input")
+            user_answer = st.text_input("Your Answer:", placeholder="e.g., hydride ion", key="user_input")
             submitted = st.form_submit_button("Submit Answer")
 
             if submitted and user_answer:
